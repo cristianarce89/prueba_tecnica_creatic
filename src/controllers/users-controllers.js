@@ -48,7 +48,31 @@ const addUser = async (req, res) => {
     }
 };
 
+//buscar usuario
+const getUser = async (req,res) => {
+    try {
+        const { id } = req.params;
+        const connection = await getConnection();
+        const result = await connection.query("SELECT id, name, email, password, repeatPassword FROM users WHERE id = ?", id);
+
+        //verifica si el resultado tiene algun registro
+        if (result.length === 0) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        res.json(result);
+
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
+};
+
+
+
 export {
     getUsers,
-    addUser
+    addUser,
+    getUser
 };
