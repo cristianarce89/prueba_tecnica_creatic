@@ -115,9 +115,35 @@ const updateUser = async (req, res) => {
     }
 };
 
+const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const connection = await getConnection();
+
+        // Consultar el usuario antes de eliminarlo
+        const selectResult = await connection.query("SELECT * FROM users WHERE id = ?", id);
+        const userToDelete = selectResult[0];
+
+        // Eliminar el usuario
+        const result = await connection.query("DELETE FROM users WHERE id = ?", id);
+
+        // Verificar si el usuario fue eliminado
+        if (result.affectedRows === 0) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        res.json({ message: "User deleted successfully", user: userToDelete });
+
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+};
+
 export {
     getUsers,
     addUser,
     getUser,
-    updateUser
+    updateUser,
+    deleteUser
 };
