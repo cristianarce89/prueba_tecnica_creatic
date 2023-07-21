@@ -4,7 +4,7 @@ import { getConnection } from "../database/database"
 const getAppointments = async (req, res) => {
     try {
         const connection = await getConnection();
-        const result = await connection.query("SELECT id, date FROM appointments");
+        const result = await connection.query("SELECT id, date, available FROM appointments");
         res.json(result);
     } catch (error) {
         res.status(500);
@@ -15,7 +15,7 @@ const getAppointments = async (req, res) => {
 //agregar appointments
 const addAppointments = async (req, res) => {
     try {
-        const { date } = req.body;
+        const { date, available } = req.body;
 
         // Validación de campos
         if (date === undefined ) {
@@ -32,7 +32,7 @@ const addAppointments = async (req, res) => {
 
         const connection = await getConnection();
 
-        const newAppointment = { date };
+        const newAppointment = { date, available };
         const result = await connection.query("INSERT INTO appointments SET ?", newAppointment);
         res.json({ result, message: "Appointments Added" });
     } catch (error) {
@@ -40,8 +40,43 @@ const addAppointments = async (req, res) => {
     }
 };
 
+//buscar appointment
+const getAppointment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const connection = await getConnection();
+        const result = await connection.query("SELECT id, date, available FROM appointments WHERE id = ?", id);
+
+            // Verificar si el valor de 'available' es igual a 0
+            if (result.length === 0 || result[0].available === 0) {
+                res.status(404).json({ message: "Appointment not available" });
+                return;
+            }
+
+        res.json(result);
+
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
+};
+
+//mostrar las fechas que estan disponibles
+const getAppointmentAvailable = async (req, res) => {
+    try {
+        const connection = await getConnection();
+        const result = await connection.query("SELECT id, date, available FROM appointments WHERE available = 1");
+
+        res.json(result);
+
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+};
 
 export {
     getAppointments,
-    addAppointments
+    addAppointments,
+    getAppointment,
+    getAppointmentAvailable
 };
