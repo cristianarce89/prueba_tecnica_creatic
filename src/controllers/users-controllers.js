@@ -49,7 +49,7 @@ const addUser = async (req, res) => {
 };
 
 //buscar usuario
-const getUser = async (req,res) => {
+const getUser = async (req, res) => {
     try {
         const { id } = req.params;
         const connection = await getConnection();
@@ -69,10 +69,55 @@ const getUser = async (req,res) => {
     }
 };
 
+//editar usuario
+const updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, email, password, repeatPassword } = req.body;
 
+        //validacion de campos
+        if (name === undefined || email === undefined || password === undefined || repeatPassword === undefined) {
+            res.status(400).json({ message: "Bad Request. Please fill all field" });
+            return;
+        }
+
+        // Validación de longitud mínima de caracteres
+        if (name.length < 6 || email.length < 6 || password.length < 6 || repeatPassword.length < 6) {
+            res.status(400).json({ message: "Fields should have a minimum of 6 characters" });
+            return;
+        }
+
+        // Validación de que password y repeatPassword sean iguales
+        if (password !== repeatPassword) {
+            res.status(400).json({ message: "Password and Repeat Password do not match" });
+            return;
+        }
+
+        const user = { name, email, password, repeatPassword };
+        const connection = await getConnection();
+        const result = await connection.query("UPDATE users SET  ? WHERE id = ?", [user, id]);
+
+        //validacion de usuario existente
+        if (result.affectedRows === 0) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        // Consultar el usuario actualizado para mostrar la información modificada
+        const selectResult = await connection.query("SELECT * FROM users WHERE id = ?", id);
+        const modifiedUser = selectResult[0];
+
+        res.json({ message: "User modified successfully", user: modifiedUser });
+
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
+};
 
 export {
     getUsers,
     addUser,
-    getUser
+    getUser,
+    updateUser
 };
