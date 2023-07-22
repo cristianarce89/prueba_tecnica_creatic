@@ -18,7 +18,7 @@ const addAppointments = async (req, res) => {
         const { date, available } = req.body;
 
         // Validación de campos
-        if (date === undefined ) {
+        if (date === undefined) {
             res.status(400).json({ message: "Bad Request. Please fill all fields" });
             return;
         }
@@ -46,12 +46,19 @@ const getAppointment = async (req, res) => {
         const { id } = req.params;
         const connection = await getConnection();
         const result = await connection.query("SELECT id, date, available FROM appointments WHERE id = ?", id);
+        const result2 = await connection.query("SELECT id, name, email, password, repeatPassword FROM users WHERE id = ?", id);
 
-            // Verificar si el valor de 'available' es igual a 0
-            if (result.length === 0 || result[0].available === 0) {
-                res.status(404).json({ message: "Appointment not available" });
-                return;
-            }
+        //verificar que el usuario exista
+        if (result2.length === 0) {
+            res.status(404).json({ message: "Usuario no existe" });
+            return;
+        }
+
+        // Verificar si el valor de 'available' es igual a 0
+        if (result.length === 0 || result[0].available === 0) {
+            res.status(404).json({ message: "Appointment not available" });
+            return;
+        }
 
         res.json(result);
 
